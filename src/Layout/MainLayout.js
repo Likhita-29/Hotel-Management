@@ -1,9 +1,9 @@
 import React from "react";
+import { Outlet } from "react-router-dom";
 import Header from "../Component/Header/Header";
 import Sidebar from "../Component/Sidebar/Sidebar";
-import Dashboard from "../Dashboard/Dashboard";
 
-const LayoutDashboard=()=>
+const MainLayout=()=>
 {
     return (
         <>
@@ -11,15 +11,15 @@ const LayoutDashboard=()=>
         <div className="main-container">
             <Sidebar/>
             <div className="content">
-            <Header className="header" />
-            <Dashboard className="dashboard" />
+            <Header className="header"/>
+            <div className="dashboard">
+                <Outlet/>
+            </div>
             </div>
         </div>
         </div>
-
-
         </>
     )
 }
 
-export default LayoutDashboard
+export default MainLayout

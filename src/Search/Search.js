@@ -1,36 +1,27 @@
 import React from "react";
-import { TextField, Button, Box } from "@mui/material";
+import { TextField, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
-
-const Search = ({ searchTerm, setSearchTerm, onAddClick }) => {
+const Search = ({ searchTerm, setSearchTerm }) => {
   return (
-    <Box
-    style={{ display:"flex",
-    justifyContent:"flex-end",
-    width:"100%",
-    alignItems:"center",
-    gridColumnGap:"20px",
-    marignBottom:"20px" }}
-    >
-    <TextField
-     variant="outlined"
-     size="small"
-     placeholder="Search..."
-     value={searchTerm}
-     onChange={(e) => setSearchTerm(e.target.value)}
-     InputProps={{
-      endAdornment: <SearchIcon style={{ marginRight: 0 }} />,
-     }}
-     className="search"
-    />
-    <Box className="buttonContainer">
-      <Button variant="contained" color="primary" className="primary_button" startIcon={<AddIcon />} onClick={onAddClick}>
-        Add New 
-      </Button>
-      </Box>
-    </Box>
+    <div>
+      {/* Search Input Field */}
+      <TextField
+        variant="outlined"
+        size="small"
+        placeholder="Search..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <SearchIcon />
+            </InputAdornment>
+          ),
+        }}
+        className="search"
+      />
+      </div>
   );
 };
 
-export default Search
+export default Search;

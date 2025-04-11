@@ -1,53 +1,67 @@
-import React, { useState } from "react";
-// import (AdbIcon, MenuItem, Tooltip, Button, AppBar, Box, Container, IconButton, Toolbar, Typography, Menu, MenuIcon, Avatar) from '@mui/material';
-
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
-import MenuIcon from '@mui/icons-material/Menu';
-import Container from '@mui/material/Container';
 import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
-import MenuItem from '@mui/material/MenuItem';
-import AdbIcon from '@mui/icons-material/Adb';
+import { List, ListItem, ListItemText, ListItemIcon } from "@mui/material";
+import { Logout, AccountCircle } from '@mui/icons-material';
+import { toast, ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+
+const Header = () => {
+  const navigate = useNavigate();
+  const [anchorElUser, setAnchorElUser] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      setUser(JSON.parse(userStr));
+    }
+  }, []);
+
+  const handleOpenUserMenu = (event) => {
+    setAnchorElUser(event.currentTarget);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
+  };
+
+  const handleLogout = () => {
+    // Clear all auth related data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    toast.success("Logged out..."); 
+    
+    // Navigate to sign-in page
+    setTimeout(() => {
+      navigate('/sign-in', { replace: true });
+    }, 1000);
+  };
+
+  return (
+    <>
+      <AppBar position="static" style={{ backgroundColor: "#ffffff", height: "60px" }}>
+        <Box sx={{
+          flexGrow: 0,
+          padding: "10px 30px",
+          display: 'flex',
+          justifyContent: "flex-end",
+          alignItems: "center"
+        }}>
 
 
-
-const Header=()=>
-{
-
-
-    const settings = ['My Profile',  'Logout'];
-
-
-    const [anchorElNav, setAnchorElNav] = useState(null);
-    const [anchorElUser, setAnchorElUser] = useState(null);
-  
-    const handleOpenNavMenu = (event) => {
-      setAnchorElNav(event.currentTarget);
-    };
-    const handleOpenUserMenu = (event) => {
-      setAnchorElUser(event.currentTarget);
-    };
-  
-    const handleCloseUserMenu = () => {
-      setAnchorElUser(null);
-    };
-
-
-
-    return (
-        <>
-        <AppBar position="static" style={{backgroundColor:"#ffffff", height:"60px"}}>
-        
-          <Box sx={{ flexGrow: 0, padding:"10px 30px",display:'flex', justifyContent:"flex-end" }}>
-            <Tooltip title="Open settings">
+          <Box>
+            <Tooltip title="Account settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Ravish" src="Ravish" />
+                <Avatar>
+                  <AccountCircle />
+                </Avatar>
               </IconButton>
             </Tooltip>
             <Menu
@@ -66,17 +80,22 @@ const Header=()=>
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography sx={{ textAlign: 'center' }}>{setting}</Typography>
-                </MenuItem>
-              ))}
+              <ListItem button onClick={handleLogout}>
+                <ListItemIcon>
+                  <Logout />
+                </ListItemIcon>
+                <ListItemText primary="Logout" />
+              </ListItem>
             </Menu>
           </Box>
-    </AppBar>
 
-        </>
-    )
-}
+          {/* This is needed for toast notifications */}
+          <ToastContainer position="top-right" autoClose={800} />
+        </Box>
+        
+      </AppBar>
+    </>
+  );
+};
 
 export default Header;
