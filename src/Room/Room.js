@@ -65,7 +65,7 @@ const Room = () => {
   
     const filtered = rooms.filter((room) => {
       if (!room[searchField]) return false; // Avoid undefined values
-      return room[searchField].toString().toLowerCase().includes(searchTerm.toLowerCase());
+      return room[searchField].toString().toLowerCase().startsWith(searchTerm.toLowerCase());
     });
   
     setFilteredRooms(filtered);
@@ -165,7 +165,7 @@ const Room = () => {
   return (
     <Box className="container">
     <ToastContainer position="top-center" autoClose={3000} />
-      <Box display={'flex'} justifyContent={'space-between'} marginBottom={'10px'} >
+      <Box display={'flex'} justifyContent={'space-between'} marginBottom={'15px'} >
 
       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
       {/* Dropdown for Selecting Search Field */}
@@ -188,8 +188,9 @@ const Room = () => {
         </div>
 
         {/* Add Button */}
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleAdd} >
-          Add New
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}
+        sx={{ backgroundColor: 'rgb(1, 1, 55)','&:hover': {backgroundColor: 'rgb(1, 1, 90)'}, fontSize:"13px" }}>
+        Add New Room
         </Button>
       </Box>
 
@@ -216,15 +217,15 @@ const Room = () => {
                 <TableCell align="center" >{room.roomNo}</TableCell>
                 <TableCell align="center" >{room.roomType}</TableCell>
                 <TableCell align="center" >{room.bedType}</TableCell>
-                <TableCell align="center" >{room.pricePerNight}</TableCell>
+                <TableCell align="center" >₹{room.pricePerNight}</TableCell>
                 <TableCell align="center" >{room.description}</TableCell>
                 <TableCell align="center" >{room.capacity}</TableCell>
                 <TableCell align="center" >{room.status}</TableCell>
                 <TableCell>                        {/*sx={{ display:"flex", flexDirection:"column" }}*/}
-                    <IconButton onClick={() => handleView(room)} sx={{ color: 'rgb(91, 93, 97)' }} size='small'>
+                    <IconButton onClick={() => handleView(room)} sx={{ color: 'rgb(1, 1, 55)' }} size='small'>
                     <VisibilityIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleEdit(room)} sx={{ color: 'rgb(1, 1, 55)' }} size='small'>
+                  <IconButton onClick={() => handleEdit(room)} sx={{ color: 'rgb(91, 93, 97)' }} size='small'>
                     <EditIcon />
                   </IconButton>
                   <IconButton onClick={() => handleDelete(room._id)} sx={{ color: 'rgb(174, 26, 26)' }} size='small'>
@@ -233,6 +234,14 @@ const Room = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {/* If no rooms are found after search */}
+            {filteredRooms.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  No data found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -316,16 +325,11 @@ const Room = () => {
             <TextField
               name="status"
               label="Status"
-              value={selectedRooms?.status || ''}
+              value={selectedRooms?.status || 'Available'}
               onChange={handleChange}
-              select
               fullWidth
               margin="normal"
-            >
-              <MenuItem value="Available">Available</MenuItem>
-              <MenuItem value="Occupied">Occupied</MenuItem>
-              <MenuItem value="Under Maintenance">Under Maintenance</MenuItem>
-            </TextField>
+            />
           </Box>
         </DialogContent>
         <DialogActions>

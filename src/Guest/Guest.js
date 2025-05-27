@@ -16,24 +16,27 @@ const Guest = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchField, setSearchField] = useState("guestName");
   const [filteredGuests, setFilteredGuests] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [filteredRooms, setFilteredRooms] = useState([]);
 
   //Adding Base URL
-  const API_BASE_URL = "http://localhost:4000/guest";
+  const API_BASE_URL = "http://localhost:4000/booking";
+  const ROOM_BASE_URL ="http://localhost:4000/room";
 
   //Fetch Branches from API
   const fetchGuests = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/get-allguest`);
+      const response = await axios.get(`${API_BASE_URL}/get-allbooking`);
       console.log("Fetching Guests - Full Response:", response);
 
-      if (!response.data || !Array.isArray(response.data.guest)) {
+      if (!response.data || !Array.isArray(response.data.booking)) {
         console.error("Unexpected response format:", response.data);
         toast.error("Error: No data received from server");
         setGuests([]);
         return;
       } 
 
-      const guestData = response.data.guest;
+      const guestData = response.data.booking;
       console.log("Processed guest data:", guestData);
 
       if (guestData.length ===0) {
@@ -56,6 +59,42 @@ const Guest = () => {
      fetchGuests();
   }, []);
 
+  //Fetch API Rooms
+  const fetchRooms = async () => {
+    try {
+      const response = await axios.get(`${ROOM_BASE_URL}/get-allroom`);
+      console.log("Fetching Rooms - Full Response:", response);
+
+      if (!response.data || !Array.isArray(response.data.room)) {
+        console.error("Unexpected response format:", response.data);
+        toast.error("Error: No data received from server");
+        setRooms([]);
+        return;
+      } 
+
+      const roomData = response.data.room;
+      console.log("Processed room data:", roomData);
+
+      if (roomData.length ===0) {
+        console.log("No rooms found in the response");
+      }
+
+      setRooms(roomData);
+      setFilteredRooms(roomData);
+
+    } catch (error) {
+      console.error("Error fetching room details:", error);
+      toast.error(error.response?.data?.message || "Error loading room details:");
+      setRooms([]);
+      setFilteredRooms([]);
+    }
+  };
+
+  useEffect(() => {
+    console.log("Initiating rooms data fetch...");
+    fetchRooms();
+ }, []);
+
   //Add search effect
     useEffect(() => {
       if (!searchTerm) {
@@ -65,44 +104,11 @@ const Guest = () => {
     
       const filtered = guests.filter((guest) => {
         if (!guest[searchField]) return false; // Avoid undefined values
-        return guest[searchField].toString().toLowerCase().includes(searchTerm.toLowerCase());
+        return guest[searchField].toString().toLowerCase().startsWith(searchTerm.toLowerCase());
       });
     
       setFilteredGuests(filtered);
     }, [searchTerm, searchField, guests]);
-
-  const handleClose = () => {
-    setViewOpen(false);
-    setSelectedGuests(null);
-    setOpen(false);
-    setIsEditing(false);
-  };
-
-  const handleAdd = () => {
-    setSelectedGuests({
-      bookingId:'',
-      guestName:'',
-      guestEmail: '',
-      guestPhone: '',
-      guestAddress: '',
-      checkIn: '',
-      checkOut: '',
-      status: 'Checked-in',
-    });
-    setOpen(true);
-    setIsEditing(false);
-  };
-
-  const handleEdit = (guest) => {
-    setSelectedGuests(guest);
-    setIsEditing(true);
-    setOpen(true);
-  };
-
-  const handleView = (guest) => {
-    setSelectedGuests(guest);
-    setViewOpen(true);
-  };
 
   const handleDelete = (id) => {
     axios.delete(`${API_BASE_URL}/delete-guest/${id}`)
@@ -116,56 +122,10 @@ const Guest = () => {
     });
 };
 
-  const handleSave = () => {
-    if (!selectedGuests) return;   //selectedGuest
-    
-        console.log("Saving Guest:", selectedGuests);
-    
-        if (isEditing) {
-          if (!selectedGuests._id) {  //selectedGuest
-            console.error("Guest ID is missing!");
-            toast.error("Guest ID is missing!");
-            return;
-          }
-
-          axios.put(`${API_BASE_URL}/update-guest/${selectedGuests._id}`, selectedGuests)
-        .then(response =>{
-           console.log("Updated Guest:", response.data);
-           toast.success("Guest upadated successfully");
-           handleClose();
-           fetchGuests();
-        })
-        .catch(error => {
-           console.error("Error updating guest:",error);
-           toast.error("Failed to update guest");
-        });
-
-      } else {
-        axios.post(`${API_BASE_URL}/add-guest`, selectedGuests)
-          .then(response => {
-             console.log("Added Guest:", response.data);
-             toast.success("Guest added successfully");
-             handleClose();
-             fetchGuests();
-          })
-          .catch(error =>{
-             console.error("Error adding guest:", error);
-             toast.error("Failed to add guest");
-          });
-        }
-    };
-
-  const handleChange = (e) => {
-    setSelectedGuests({
-      ...selectedGuests,
-      [e.target.name]: e.target.value,
-    });
-  };
-
   return (
     <Box className="container">
     <ToastContainer position="top-center" autoClose={3000} />
-    <Box display={'flex'} justifyContent={'space-between'} marginBottom={'10px'} >
+    <Box display={'flex'} justifyContent={'space-between'} marginBottom={'15px'} >
 
       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
       {/* Dropdown for Selecting Search Field */}
@@ -178,19 +138,15 @@ const Guest = () => {
         variant="outlined"
         label="Search By"
       >
-        <MenuItem value="guestName">Guest Name</MenuItem>
-        <MenuItem value="guestPhone">Guest Phone Number</MenuItem>
-        <MenuItem value="guestAddress">Guest Address</MenuItem>
+        <MenuItem value="guestName">Name</MenuItem>
+        <MenuItem value="guestPhone">Phone Number</MenuItem>
+        <MenuItem value="guestAddress">Address</MenuItem>
       </TextField>
 
         {/* Search */}
         <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm}/>
         </div>
 
-        {/* Add Button */}
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleAdd} >
-          Add New
-        </Button>
       </Box>
 
     <Paper sx={{ width: "100%", overflow: "hidden" }}>
@@ -199,13 +155,11 @@ const Guest = () => {
           <TableHead>
             <TableRow>
               <TableCell align="center" ><b>Sl No</b></TableCell>
-              <TableCell align="center" ><b>Booking Id</b></TableCell>
-              <TableCell align="center" ><b>Guest Name</b></TableCell>
-              <TableCell align="center" ><b>Guest Email</b></TableCell>
-              <TableCell align="center" ><b>Guest Phone</b></TableCell>
-              <TableCell align="center" ><b>Guest Address</b></TableCell>
-              <TableCell align="center" ><b>Check In</b></TableCell>
-              <TableCell align="center" ><b>Check Out</b></TableCell>
+              <TableCell align="center" ><b>Room No</b></TableCell>
+              <TableCell align="center" ><b>Name</b></TableCell>
+              <TableCell align="center" ><b>Email</b></TableCell>
+              <TableCell align="center" ><b>Phone No</b></TableCell>
+              <TableCell align="center" ><b>Address</b></TableCell>
               <TableCell align="center" ><b>Status</b></TableCell>
               <TableCell align="center" ><b>Action</b></TableCell>
             </TableRow>
@@ -214,162 +168,30 @@ const Guest = () => {
             {filteredGuests.map((guest, index) => (
               <TableRow key={guest._id}>
                 <TableCell align="center" >{index + 1 }</TableCell>
-                <TableCell align="center" >{guest.bookingId}</TableCell>
-                <TableCell align="center" >{guest.guestName}</TableCell>
-                <TableCell align="center" >{guest.guestEmail}</TableCell>
-                <TableCell align="center" >{guest.guestPhone}</TableCell>
-                <TableCell align="center" >{guest.guestAddress}</TableCell>
-                <TableCell align="center" >{guest.checkIn}</TableCell>
-                <TableCell align="center" >{guest.checkOut}</TableCell>
+                <TableCell align="center" >{guest.roomNo}</TableCell>
+                <TableCell align="center" >{guest.customerName}</TableCell>
+                <TableCell align="center" >{guest.email}</TableCell>
+                <TableCell align="center" >{guest.phoneNumber}</TableCell>
+                <TableCell align="center" >{guest.address}</TableCell>
                 <TableCell align="center" >{guest.status}</TableCell>
-                <TableCell>                        {/*sx={{ display:"flex", flexDirection:"column" }}*/}
-                    <IconButton onClick={() => handleView(guest)} sx={{ color: 'rgb(91, 93, 97)' }} size='small'>
-                    <VisibilityIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleEdit(guest)} sx={{ color: 'rgb(1, 1, 55)' }} size='small'>
-                    <EditIcon />
-                  </IconButton>
+                <TableCell >                        {/*sx={{ display:"flex", flexDirection:"column" }}*/}
                   <IconButton onClick={() => handleDelete(guest._id)} sx={{ color: 'rgb(174, 26, 26)' }} size='small'>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
               </TableRow>
             ))}
+            {/* If no guests are found after search */}
+            {filteredGuests.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  No data found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
-
-       {/* Add/Edit Dialog */}
-       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {isEditing ? 'Edit Guest' : 'Add New Guest'}
-          <IconButton
-            onClick={handleClose}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{scrollbarWidth: 'none'}}>
-          <Box className="form-fields">
-            <TextField
-              name="bookingId"
-              label="Booking Id"
-              value={selectedGuests?.bookingId || ''}
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              name="guestName"
-              label="Guest Name"
-              value={selectedGuests?.guestName || ''}
-              onChange={handleChange}
-              type='text'
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              name="guestEmail"
-              label="Guest Email"
-              value={selectedGuests?.guestEmail || ''}
-              onChange={handleChange}
-              type='email'
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              name="guestPhone"
-              label="Guest Phone"
-              value={selectedGuests?.guestPhone || ''}
-              onChange={handleChange}
-              type="number"
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              name="guestAddress"
-              label="Guest Address"
-              value={selectedGuests?.guestAddress || ''}
-              onChange={handleChange}
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              name="checkIn"
-              label="Check In"
-              value={selectedGuests?.checkIn || ''}
-              onChange={handleChange}
-              type='date'
-              fullWidth
-              margin="normal"
-              InputLabelProps={{
-                shrink: true, 
-              }}
-            />
-            <TextField
-              name="checkOut"
-              label="Check Out"
-              value={selectedGuests?.checkOut || ''}
-              onChange={handleChange}
-              type='date'
-              fullWidth
-              margin="normal"
-              InputLabelProps={{
-                shrink: true, 
-              }}
-            />
-            <TextField
-              name="status"
-              label="Status"
-              value={selectedGuests?.status || ''}
-              onChange={handleChange}
-              select
-              fullWidth
-              margin="normal"
-            >
-              <MenuItem value="Checked-in">Checked-in</MenuItem>
-              <MenuItem value="Checked-out">Checked-out</MenuItem>
-              <MenuItem value="Cancelled">Cancelled</MenuItem>
-            </TextField>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button onClick={handleSave} variant="contained">
-            {isEditing ? 'Update' : 'Save'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-       {/* View Dialog */}
-       <Dialog open={viewOpen} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          Guest Details
-          <IconButton
-            onClick={handleClose}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          {selectedGuests && (
-            <Box className="view-details">
-              <div style={{marginBottom:'5px'}}><strong>Booking ID:</strong> {selectedGuests.bookingId}</div>
-              <div style={{marginBottom:'5px'}}><strong>Guest Name:</strong> {selectedGuests.guestName}</div>
-              <div style={{marginBottom:'5px'}}><strong>Guest Email:</strong> {selectedGuests.guestEmail}</div>
-              <div style={{marginBottom:'5px'}}><strong>Guest Phone:</strong> {selectedGuests.guestPhone}</div>
-              <div style={{marginBottom:'5px'}}><strong>Guest Address:</strong> {selectedGuests.guestAddress}</div>
-              <div style={{marginBottom:'5px'}}><strong>Check In:</strong> {selectedGuests.checkIn}</div>
-              <div style={{marginBottom:'5px'}}><strong>Check Out:</strong> {selectedGuests.checkOut}</div>
-              <div style={{marginBottom:'5px'}}><strong>Status:</strong> {selectedGuests.status}</div>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Close</Button>
-        </DialogActions>
-      </Dialog>
     </Paper>
   </Box>
   );

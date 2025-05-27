@@ -65,7 +65,7 @@ const Staff = () => {
     
       const filtered = staffs.filter((staff) => {
         if (!staff[searchField]) return false; // Avoid undefined values
-        return staff[searchField].toString().toLowerCase().includes(searchTerm.toLowerCase());
+        return staff[searchField].toString().toLowerCase().startsWith(searchTerm.toLowerCase());
       });
     
       setFilteredStaffs(filtered);
@@ -165,7 +165,7 @@ const Staff = () => {
   return (
     <Box className="container">
     <ToastContainer position="top-center" autoClose={3000} />
-    <Box display={'flex'} justifyContent={'space-between'} marginBottom={'10px'} >
+    <Box display={'flex'} justifyContent={'space-between'} marginBottom={'15px'} >
         
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
         {/* Dropdown for Selecting Search Field */}
@@ -188,8 +188,9 @@ const Staff = () => {
           </div>
   
           {/* Add Button */}
-          <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleAdd} >
-            Add New
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd} 
+          sx={{ backgroundColor: 'rgb(1, 1, 55)','&:hover': {backgroundColor: 'rgb(1, 1, 90)'}, fontSize:"13px" }}>
+            Add New Staff
           </Button>
         </Box>
 
@@ -223,10 +224,10 @@ const Staff = () => {
                 <TableCell align="center" >{staff.joiningDate}</TableCell>
                 <TableCell align="center" >{staff.status}</TableCell>
                 <TableCell>                        {/*sx={{ display:"flex", flexDirection:"column" }}*/}
-                    <IconButton onClick={() => handleView(staff)} sx={{ color: 'rgb(91, 93, 97)' }} size='small'>
+                    <IconButton onClick={() => handleView(staff)} sx={{ color: 'rgb(1, 1, 55)' }} size='small'>
                     <VisibilityIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleEdit(staff)} sx={{ color: 'rgb(1, 1, 55)' }} size='small'>
+                  <IconButton onClick={() => handleEdit(staff)} sx={{ color: 'rgb(91, 93, 97)' }} size='small'>
                     <EditIcon />
                   </IconButton>
                   <IconButton onClick={() => handleDelete(staff._id)} sx={{ color: 'rgb(174, 26, 26)' }} size='small'>
@@ -235,6 +236,14 @@ const Staff = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {/* If no staffs are found after search */}
+            {filteredStaffs.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  No data found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>

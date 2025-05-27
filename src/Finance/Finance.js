@@ -65,7 +65,7 @@ const Finance = () => {
     
       const filtered = finances.filter((finance) => {
         if (!finance[searchField]) return false; // Avoid undefined values
-        return finance[searchField].toString().toLowerCase().includes(searchTerm.toLowerCase());
+        return finance[searchField].toString().toLowerCase().startsWith(searchTerm.toLowerCase());
       });
     
       setFilteredFinances(filtered);
@@ -164,7 +164,7 @@ const Finance = () => {
   return (
     <Box className="container">
     <ToastContainer position="top-center" autoClose={3000} />
-    <Box display={'flex'} justifyContent={'space-between'} marginBottom={'10px'} >
+    <Box display={'flex'} justifyContent={'space-between'} marginBottom={'15px'} >
 
 <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
 {/* Dropdown for Selecting Search Field */}
@@ -188,8 +188,9 @@ const Finance = () => {
   </div>
 
   {/* Add Button */}
-  <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleAdd} >
-    Add New
+  <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd} 
+  sx={{ backgroundColor: 'rgb(1, 1, 55)','&:hover': {backgroundColor: 'rgb(1, 1, 90)'}, fontSize:"13px" }}>
+    Add New Finance
   </Button>
 </Box>
 
@@ -221,10 +222,10 @@ const Finance = () => {
                 <TableCell align="center" >{finance.transactionDate}</TableCell>
                 <TableCell align="center" >{finance.status}</TableCell>
                 <TableCell>                        {/*sx={{ display:"flex", flexDirection:"column" }}*/}
-                    <IconButton onClick={() => handleView(finance)} sx={{ color: 'rgb(91, 93, 97)' }} size='small'>
+                    <IconButton onClick={() => handleView(finance)} sx={{ color: 'rgb(1, 1, 55)' }} size='small'>
                     <VisibilityIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleEdit(finance)} sx={{ color: 'rgb(1, 1, 55)' }} size='small'>
+                  <IconButton onClick={() => handleEdit(finance)} sx={{ color: 'rgb(91, 93, 97)' }} size='small'>
                     <EditIcon />
                   </IconButton>
                   <IconButton onClick={() => handleDelete(finance._id)} sx={{ color: 'rgb(174, 26, 26)' }} size='small'>
@@ -233,6 +234,14 @@ const Finance = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {/* If no finances are found after search */}
+            {filteredFinances.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  No data found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>

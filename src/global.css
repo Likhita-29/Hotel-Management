@@ -107,10 +107,13 @@ body{
   .main-container {
     display: flex;
     width: 100%;
+    height: 100vh;
+    overflow-y: hidden;
   }
   
   .sidebar {
     width: 260px;
+    /* height: 136vh;         sidebar height  */
     background-color: var(--primary_color);
     color: white;
     padding: 10px;
@@ -133,7 +136,9 @@ body{
   
   .dashboard {
     flex: 1; 
-    padding: 20px;
+    overflow-y: auto;
+    height: 100vh;
+    padding: 10px 3px;
     background-color: #f4f4f4;
   }
 

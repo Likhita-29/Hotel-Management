@@ -143,7 +143,7 @@ useEffect(() => {
     
       const filtered = bookings.filter((booking) => {
         if (!booking[searchField]) return false; // Avoid undefined values
-        return booking[searchField].toString().toLowerCase().includes(searchTerm.toLowerCase());
+        return booking[searchField].toString().toLowerCase().startsWith(searchTerm.toLowerCase());
       });
     
       setFilteredBookings(filtered);
@@ -160,12 +160,16 @@ useEffect(() => {
     setSelectedBookings({         
       customerName:'',
       roomNo: '',
+      email: '',
+      phoneNumber: '',
+      address: '',
       bookingDate: '',
+      totalPrice: '',
       checkIn: '',
       checkOut: '',
       discountCode:'',
-      totalPrice: '',
-      paymentStatus: 'Pending'
+      paymentStatus: 'Pending',
+      status: '-',
     });
     setOpen(true);
     setIsEditing(false);
@@ -196,7 +200,11 @@ useEffect(() => {
 
   const handleSave = () => {
     if (!selectedBookings) return;   //selectedBooking
-    
+
+    if (!selectedBookings.checkIn) {
+      toast.error("Check-In date is required!");
+      return;
+    }
         console.log("Saving Booking:", selectedBookings);
     
         if (isEditing) {
@@ -233,17 +241,61 @@ useEffect(() => {
         }
     };
 
-  const handleChange = (e) => {
-    setSelectedBookings({
-      ...selectedBookings,
-      [e.target.name]: e.target.value,
-    });
-  };
+    const handleChange = (e) => {
+      const { name, value } = e.target;
+    
+      // Update selectedBookings with new value
+      const updatedBooking = {
+        ...selectedBookings,
+        [name]: value,
+      };
+    
+      // Parse check-in and check-out
+      const checkInDate = new Date(updatedBooking.checkIn);
+      const checkOutDate = new Date(updatedBooking.checkOut);
+    
+      // Strip time to just use calendar dates
+      let numberOfNights = 0;
+      if (checkInDate && checkOutDate && checkOutDate > checkInDate) {
+        const checkInOnlyDate = new Date(checkInDate.toDateString());
+        const checkOutOnlyDate = new Date(checkOutDate.toDateString());
+        const timeDiff = checkOutOnlyDate - checkInOnlyDate;
+        numberOfNights = timeDiff / (1000 * 60 * 60 * 24);
+      }
+    
+      updatedBooking.numberOfNights = numberOfNights;
+    
+      // Find selected room and discount
+      const selectedRoom = rooms.find(room => room.roomNo === updatedBooking.roomNo);
+      const selectedDiscount = discounts.find(discount => discount.discountCode === updatedBooking.discountCode);
+    
+      const basePrice = selectedRoom ? selectedRoom.pricePerNight : 0;
+      const discountPercent = selectedDiscount ? selectedDiscount.discountValue : 0;
+    
+      const pricePerNight = discountPercent > 0 ? basePrice - (basePrice * discountPercent / 100) : basePrice;
+    
+      // Calculate total price only if nights are valid
+      const totalPrice = numberOfNights > 0 ? pricePerNight * numberOfNights : pricePerNight;
+    
+      updatedBooking.totalPrice = totalPrice;
+
+      // Auto-update status
+      if (updatedBooking.checkIn && !updatedBooking.checkOut) {
+        updatedBooking.status = 'CheckIn';
+      } else if (updatedBooking.checkIn && updatedBooking.checkOut) {
+        updatedBooking.status = 'CheckOut';
+      } else {
+        updatedBooking.status = '-';
+      }
+    
+      setSelectedBookings(updatedBooking);
+    };    
+    
 
   return (
     <Box className="container">
     <ToastContainer position="top-center" autoClose={3000} />
-    <Box display={'flex'} justifyContent={'space-between'} marginBottom={'10px'} >
+    <Box display={'flex'} justifyContent={'space-between'} marginBottom={'15px'} >
 
 <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
 {/* Dropdown for Selecting Search Field */}
@@ -266,8 +318,9 @@ useEffect(() => {
   </div>
 
   {/* Add Button */}
-  <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleAdd} >
-    Add New
+  <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd} 
+  sx={{ backgroundColor: 'rgb(1, 1, 55)','&:hover': {backgroundColor: 'rgb(1, 1, 90)'}, fontSize:"13px" }}>
+    Add New Booking
   </Button>
 </Box>
 
@@ -280,10 +333,11 @@ useEffect(() => {
               <TableCell align="center" ><b>Customer Name</b></TableCell>
               <TableCell align="center" ><b>Room Number</b></TableCell>
               <TableCell align="center" ><b>Booking Date</b></TableCell>
+              <TableCell align="center" ><b>Total Price</b></TableCell>
               <TableCell align="center" ><b>Check In</b></TableCell>
               <TableCell align="center" ><b>Check Out</b></TableCell>
-              <TableCell align="center" ><b>Total Price</b></TableCell>
               <TableCell align="center" ><b>Payment Status</b></TableCell>
+              <TableCell align="center" ><b>Status</b></TableCell>
               <TableCell align="center" ><b>Action</b></TableCell>
             </TableRow>
           </TableHead>
@@ -294,15 +348,16 @@ useEffect(() => {
                 <TableCell align="center" >{booking.customerName}</TableCell>
                 <TableCell align="center" >{booking.roomNo}</TableCell>
                 <TableCell align="center" >{booking.bookingDate}</TableCell>
+                <TableCell align="center" >₹{booking.totalPrice}</TableCell>
                 <TableCell align="center" >{booking.checkIn}</TableCell>
                 <TableCell align="center" >{booking.checkOut}</TableCell>
-                <TableCell align="center" >{booking.totalPrice}</TableCell>
                 <TableCell align="center" >{booking.paymentStatus}</TableCell>
+                <TableCell align="center" >{booking.status}</TableCell>
                 <TableCell>                        {/*sx={{ display:"flex", flexDirection:"column" }}*/}
-                    <IconButton onClick={() => handleView(booking)} sx={{ color: 'rgb(91, 93, 97)' }} size='small'>
+                    <IconButton onClick={() => handleView(booking)} sx={{ color: 'rgb(1, 1, 55)' }} size='small'>
                     <VisibilityIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleEdit(booking)} sx={{ color: 'rgb(1, 1, 55)' }} size='small'>
+                  <IconButton onClick={() => handleEdit(booking)} sx={{ color: 'rgb(91, 93, 97)' }} size='small'>
                     <EditIcon />
                   </IconButton>
                   <IconButton onClick={() => handleDelete(booking._id)} sx={{ color: 'rgb(174, 26, 26)' }} size='small'>
@@ -311,6 +366,13 @@ useEffect(() => {
                 </TableCell>
               </TableRow>
             ))}
+            {filteredBookings.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  No data found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -340,6 +402,7 @@ useEffect(() => {
             <TextField
               name="roomNo"
               label="Room Number"
+              disabled={isEditing}
               value={selectedBookings?.roomNo || ''}
               onChange={handleChange}
               select
@@ -347,15 +410,45 @@ useEffect(() => {
               fullWidth
               margin="normal"
             >
-              {rooms.map((room) => (
+              {rooms
+              .filter((room) => room.status === "Available")
+              .map((room) => (
                 <MenuItem key={room._id} value={room.roomNo}>
-                  {room.roomNo}  {/* You can customize the label */}
+                  {room.roomNo} 
                   </MenuItem>
                 ))}
             </TextField>
             <TextField
+              name="email"
+              label="Email"
+              value={selectedBookings?.email || ''}
+              onChange={handleChange}
+              type="email"
+              fullWidth
+              margin="normal"
+            />
+            <TextField
+              name="phoneNumber"
+              label="Phone No"
+              value={selectedBookings?.phoneNumber || ''}
+              onChange={handleChange}
+              type="number"
+              fullWidth
+              margin="normal"
+            />
+            <TextField
+              name="address"
+              label="Address"
+              value={selectedBookings?.address || ''}
+              onChange={handleChange}
+              type="text"
+              fullWidth
+              margin="normal"
+            />
+            <TextField
               name="bookingDate"
               label="Booking Date"
+              disabled={isEditing}
               value={selectedBookings?.bookingDate || ''}
               onChange={handleChange}
               type="date"
@@ -364,6 +457,15 @@ useEffect(() => {
               }}
               fullWidth
               margin="normal"
+            />
+            <TextField
+              name="totalPrice"
+              label="Total Price"
+              value={selectedBookings?.totalPrice || ''}
+              type="number"
+              fullWidth
+              margin="normal"
+              InputProps={{ readOnly: true }}
             />
             <TextField
               name="checkIn"
@@ -398,21 +500,14 @@ useEffect(() => {
               fullWidth
               margin="normal"
             >
-              {discounts.map((discount) => (
+              {discounts
+              .filter((discount) => discount.status === "Active")
+              .map((discount) => (
                 <MenuItem key={discount._id} value={discount.discountCode}>
-                  {discount.discountCode}  {/* You can customize the label */}
+                  {discount.discountCode}  
                   </MenuItem>
                 ))}
             </TextField>
-            <TextField
-              name="totalPrice"
-              label="Total Price"
-              value={selectedBookings?.totalPrice || ''}
-              onChange={handleChange}
-              type="number"
-              fullWidth
-              margin="normal"
-            />
             <TextField
               name="paymentStatus"
               label="PaymentStatus"
@@ -426,6 +521,14 @@ useEffect(() => {
               <MenuItem value="Paid">Paid</MenuItem>
               <MenuItem value="Refunded">Refunded</MenuItem>
             </TextField>
+            <TextField
+              name="status"
+              label="Status"
+              value={selectedBookings?.status || ''}
+              fullWidth
+              margin="normal"
+              InputProps={{ readOnly: true }}
+            />
           </Box>
         </DialogContent>
         <DialogActions>
@@ -452,10 +555,11 @@ useEffect(() => {
               <div style={{marginBottom:'5px'}}><strong>Customer Name:</strong> {selectedBookings.customerName}</div>
               <div style={{marginBottom:'5px'}}><strong>Room Number:</strong> {selectedBookings.roomNo}</div>
               <div style={{marginBottom:'5px'}}><strong>Booking Date:</strong> {selectedBookings.bookingDate}</div>
+              <div style={{marginBottom:'5px'}}><strong>Total Price:</strong> {selectedBookings.totalPrice}</div>
               <div style={{marginBottom:'5px'}}><strong>Check In:</strong> {selectedBookings.checkIn}</div>
               <div style={{marginBottom:'5px'}}><strong>Check Out:</strong> {selectedBookings.checkOut}</div>
-              <div style={{marginBottom:'5px'}}><strong>Total Price:</strong> {selectedBookings.totalPrice}</div>
               <div style={{marginBottom:'5px'}}><strong>Payment Status:</strong> {selectedBookings.paymentStatus}</div>
+              <div style={{marginBottom:'5px'}}><strong>Status:</strong> {selectedBookings.status}</div>
             </Box>
           )}
         </DialogContent>

@@ -40,9 +40,27 @@ const Discount = () => {
         console.log("No discounts found in the response");
       }
 
-      setDiscounts(discountData);
-      setFilteredDiscounts(discountData);
+      const today = new Date().setHours(0, 0, 0, 0); // normalize today's date
 
+      const updatedDiscounts = discountData.map((discount) => {
+        const validFrom = new Date(discount.validFrom).setHours(0, 0, 0, 0);
+        const validTo = new Date(discount.validTo).setHours(0, 0, 0, 0);
+  
+        // Automatically set status based on today's date
+        if (validFrom <= today && today <= validTo) {
+          return { ...discount, status: "Active" };
+        } else if (today < validFrom) {
+          return { ...discount, status: "Upcoming" };
+        } else {
+          return { ...discount, status: "Expired" };
+        }
+      });
+  
+      const activeDiscounts = updatedDiscounts.filter((discount) => discount.status === "Active");
+
+      setDiscounts(updatedDiscounts);
+      setFilteredDiscounts(activeDiscounts);
+  
     } catch (error) {
       console.error("Error fetching discount details:", error);
       toast.error(error.response?.data?.message || "Error loading discount details:");
@@ -65,7 +83,7 @@ const Discount = () => {
     
       const filtered = discounts.filter((discount) => {
         if (!discount[searchField]) return false; // Avoid undefined values
-        return discount[searchField].toString().toLowerCase().includes(searchTerm.toLowerCase());
+        return discount[searchField].toString().toLowerCase().startsWith(searchTerm.toLowerCase());
       });
     
       setFilteredDiscounts(filtered);
@@ -163,7 +181,7 @@ const Discount = () => {
   return (
     <Box className="container">
       <ToastContainer position="top-center" autoClose={3000} />
-      <Box display={'flex'} justifyContent={'space-between'} marginBottom={'10px'} >
+      <Box display={'flex'} justifyContent={'space-between'} marginBottom={'15px'} >
 
       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
       {/* Dropdown for Selecting Search Field */}
@@ -186,8 +204,9 @@ const Discount = () => {
         </div>
 
         {/* Add Button */}
-        <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleAdd} >
-          Add New
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd} 
+        sx={{ backgroundColor: 'rgb(1, 1, 55)','&:hover': {backgroundColor: 'rgb(1, 1, 90)'}, fontSize:"13px" }}>
+        Add New Discount
         </Button>
       </Box>
 
@@ -212,15 +231,15 @@ const Discount = () => {
                 <TableCell align="center" >{index + 1 }</TableCell>
                 <TableCell align="center" >{discount.discountCode}</TableCell>
                 <TableCell align="center" >{discount.discountDescription}</TableCell>
-                <TableCell align="center" >{discount.discountValue}</TableCell>
+                <TableCell align="center" >{discount.discountValue}%</TableCell>
                 <TableCell align="center" >{discount.validFrom}</TableCell>
                 <TableCell align="center" >{discount.validTo}</TableCell>
                 <TableCell align="center" >{discount.status}</TableCell>
                 <TableCell>
-                    <IconButton onClick={() => handleView(discount)} sx={{ color: 'rgb(91, 93, 97)' }} size='small'>
+                    <IconButton onClick={() => handleView(discount)} sx={{ color: 'rgb(1, 1, 55)' }} size='small'>
                     <VisibilityIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleEdit(discount)} sx={{ color: 'rgb(1, 1, 55)' }} size='small'>
+                  <IconButton onClick={() => handleEdit(discount)} sx={{ color: 'rgb(91, 93, 97)' }} size='small'>
                     <EditIcon />
                   </IconButton>
                   <IconButton onClick={() => handleDelete(discount._id)} sx={{ color: 'rgb(174, 26, 26)' }} size='small'>
@@ -229,6 +248,14 @@ const Discount = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {/* If no discounts are found after search */}
+            {filteredDiscounts.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} align="center">
+                  No data found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -302,15 +329,15 @@ const Discount = () => {
               label="Status"
               value={selectedDiscounts?.status || ''}
               onChange={handleChange}
-              select
+              // select
               fullWidth
               margin="normal"
-            >
-              <MenuItem value="Active">Active</MenuItem>
+            />
+              {/* <MenuItem value="Active">Active</MenuItem>
               <MenuItem value="Inactive">Inactive</MenuItem>
               <MenuItem value="Expired">Expired</MenuItem>
               <MenuItem value="Upcoming">Upcoming</MenuItem>
-            </TextField>
+            </TextField> */}
           </Box>
         </DialogContent>
         <DialogActions>
