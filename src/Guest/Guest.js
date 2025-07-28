@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import Search from '../Search/Search.js';
-import AddIcon from '@mui/icons-material/Add';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Box } from '@mui/material';
@@ -9,10 +8,6 @@ import {Visibility as VisibilityIcon, Edit as EditIcon, Delete as DeleteIcon, Cl
 
 const Guest = () => {
   const [guests, setGuests] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [viewOpen, setViewOpen] = useState(false);
-  const [selectedGuests, setSelectedGuests] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchField, setSearchField] = useState("guestName");
   const [filteredGuests, setFilteredGuests] = useState([]);
@@ -36,7 +31,7 @@ const Guest = () => {
         return;
       } 
 
-      const guestData = response.data.booking;
+      const guestData = response.data.booking.filter(guest => guest.status !== "CheckOut");
       console.log("Processed guest data:", guestData);
 
       if (guestData.length ===0) {
@@ -110,18 +105,6 @@ const Guest = () => {
       setFilteredGuests(filtered);
     }, [searchTerm, searchField, guests]);
 
-  const handleDelete = (id) => {
-    axios.delete(`${API_BASE_URL}/delete-guest/${id}`)
-    .then(() => {
-       toast.success("Guest deleted successfully");
-       fetchGuests();
-    })
-    .catch(error =>{
-      console.error("Error deleting guest:", error);
-      toast.error("Failed to delete guest");
-    });
-};
-
   return (
     <Box className="container">
     <ToastContainer position="top-center" autoClose={3000} />
@@ -161,7 +144,6 @@ const Guest = () => {
               <TableCell align="center" ><b>Phone No</b></TableCell>
               <TableCell align="center" ><b>Address</b></TableCell>
               <TableCell align="center" ><b>Status</b></TableCell>
-              <TableCell align="center" ><b>Action</b></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -174,11 +156,6 @@ const Guest = () => {
                 <TableCell align="center" >{guest.phoneNumber}</TableCell>
                 <TableCell align="center" >{guest.address}</TableCell>
                 <TableCell align="center" >{guest.status}</TableCell>
-                <TableCell >                        {/*sx={{ display:"flex", flexDirection:"column" }}*/}
-                  <IconButton onClick={() => handleDelete(guest._id)} sx={{ color: 'rgb(174, 26, 26)' }} size='small'>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
               </TableRow>
             ))}
             {/* If no guests are found after search */}
