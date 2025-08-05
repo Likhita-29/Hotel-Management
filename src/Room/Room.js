@@ -352,7 +352,8 @@ const Room = () => {
         </DialogTitle>
         <DialogContent>
           {selectedRooms && (
-            <Box className="view-details">
+            <Box className="view-details" sx={{display:'flex', gap:2 }}>
+              <div>
               <div style={{marginBottom:'5px'}}><strong>Room No:</strong> {selectedRooms.roomNo}</div>
               <div style={{marginBottom:'5px'}}><strong>Room Type:</strong> {selectedRooms.roomType}</div>
               <div style={{marginBottom:'5px'}}><strong>Bed Type:</strong> {selectedRooms.bedType}</div>
@@ -360,6 +361,10 @@ const Room = () => {
               <div style={{marginBottom:'5px'}}><strong>Description:</strong> {selectedRooms.description}</div>
               <div style={{marginBottom:'5px'}}><strong>Capacity:</strong> {selectedRooms.capacity}</div>
               <div style={{marginBottom:'5px'}}><strong>Status:</strong> {selectedRooms.status}</div>
+              </div>
+              <div>
+                <img height="200px" width="250px" src="/sidebar/Room1.jpeg"/>
+              </div>
             </Box>
           )}
         </DialogContent>
